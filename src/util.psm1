@@ -38,3 +38,48 @@ function Get-JavaMajorVersion {
     }
     return $version.Substring(0, $endIndex)
 }
+
+function Initialize-Profile {
+
+    if ($null -ne $PROFILE -and $PROFILE -ne '') {
+        $SNIPPET = @"
+# JENV-INIT-START Do not remove any of this comment
+function jenv {
+    . "$PSScriptRoot\jenv.ps1" @args
+}
+# JENV-INIT-END Do not remove any of this comment
+"@
+
+        $profilePath = $PROFILE
+        if (!(Test-Path $profilePath)) {
+            New-Item -ItemType File -Path $profilePath -Force | Out-Null
+        }
+        $lines = Get-Content $profilePath
+
+        $inside = $false
+        $newLines = @()
+        $oldSnippet = @()
+        foreach ($line in $lines) {
+            if ($line.StartsWith('# JENV-INIT-START')) {
+                $inside = $true
+                $oldSnippet += $line
+            } elseif ($line.StartsWith('# JENV-INIT-END')) {
+                $inside = $false
+                $oldSnippet += $line
+            } elseif ($inside) {
+                $oldSnippet += $line
+            } else {
+                $newLines += $line
+            }
+        }
+        if (($oldSnippet.Count -eq 0) -or (($oldSnippet -join "`r`n") -ne $SNIPPET)) {
+            $newLines += $SNIPPET
+            $newLines | Set-Content $profilePath
+            if ($oldSnippet.Count -eq 0) {
+                Write-Host "Added Jenv to profile file $PROFILE"
+            } else {
+                Write-Host "Updated Jenv in profile file $PROFILE"
+            }
+        }
+    }
+}

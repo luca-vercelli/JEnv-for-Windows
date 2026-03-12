@@ -62,6 +62,26 @@ function Invoke-Uninstall {
     if ($uninstall -eq 1) {
         Remove-Item $env:appdata/jenv -recurse -force
     }
+
+    # clean up profile
+    if ($null -ne $PROFILE -and $PROFILE -ne '') {
+        $lines = Get-Content $PROFILE
+        $newLines = @()
+        foreach ($line in $lines) {
+            if ($line.StartsWith('# JENV-INIT-START')) { $inside = $true; continue }
+            if ($line.StartsWith('# JENV-INIT-END'))   { $inside = $false; continue }
+            if (-not $inside) {
+                $newLines += $line
+            }
+        }
+        if ($newLines.Count -gt 0) {
+            $newLines | Set-Content $PROFILE
+        } else {
+            Set-Content $PROFILE -Value $null
+        }
+        Write-Host "Removed JEnv from $PROFILE"
+    }
+
     #endregion
 
     # Delete jenv folder

@@ -50,6 +50,9 @@ Import-Module $PSScriptRoot\jenv-uninstall.psm1 -Force
 Import-Module $PSScriptRoot\jenv-autoscan.psm1 -Force
 #endregion
 
+# init jenv in PowerShell profile
+Initialize-Profile
+
 #region Installation
 # TODO: Check for autoupdates
 $JENV_VERSION = "v2.2.1"
